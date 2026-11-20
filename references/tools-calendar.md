@@ -33,6 +33,8 @@
 
 Повторяющиеся события — по записи на каждый повтор. Ссылка на веб-интерфейс: `{{calendar_url}}/event/<event_id>`, для повтора — `?recurrenceId=<recurrence_id>`.
 
+**Формат ответа (проверено):** `start`/`end` — ОБЪЕКТЫ `{date_time: "YYYY-MM-DDTHH:mm:ss", time_zone: "Europe/Moscow"}`, не строки (парсь `start.date_time`). Прочие поля: `ical_uid`, `event_id`, `calendars`, `recurrence_id` (у повторов), `summary`, `description`, `location`, `organizer`. Параметр `time_zone` запроса (напр. `"Europe/Moscow"`) задаёт таймзону в ответе.
+
 ## calendar.get_event
 | Параметр | Тип |
 |---|---|---|
@@ -85,6 +87,8 @@ start, end, summary, description, location, repetition, rules (все поля �
 | cursor | string | next_cursor; передаётся ОДИН |
 
 Повторы — отдельными записями с recurrence_id. Нет почты → 404; нет прав → ошибка прав.
+
+**Формат ответа (проверено):** элементы — `{start: {date_time, time_zone}, end: {…}, summary: null, recurrence_id}`; `summary` всегда null (названия встреч — из list_events); при повторяющихся сериях интервалов много — обязателен цикл по `cursor`. Работает и для собственной почты (с календарным токеном; с токеном почты — 403).
 
 ## calendar.get_room_availability
 Те же from/to/limit/cursor, но `room_id` — публичный идентификатор переговорки (см. list_rooms).

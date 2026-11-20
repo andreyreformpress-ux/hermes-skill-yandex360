@@ -7,7 +7,7 @@
 ---
 
 ## telemost.get_current_user
-Без параметров. Возвращает пользователя токена: `id`, `chat_id`, `display_name`, `login`, `is_bot`, `organizations[]` (`id`, `name`). `org_id` отсюда — для search_users/search_chats/search_messages.
+Без параметров. Возвращает пользователя токена: `id`, `chat_id`, `display_name`, `login`, `is_bot`, `organizations[]` (`id` — целое, `name`). `org_id` отсюда — для search_users/search_chats/search_messages.
 
 ## telemost.search_users
 | Параметр | Тип | Описание |
@@ -17,6 +17,8 @@
 | limit | int (50) | Максимум результатов |
 
 Одна страница, по релевантности. Логин — только для пользователей общей организации.
+
+**Формат ответа (проверено):** `items[].user.{id, chat_id, display_name, login, is_bot}` — email в `items[].user.login` (вложенный объект `user`, НЕ `items[].login`!). `highlights` — подсветка совпадений.
 
 ## telemost.create_meeting
 | Параметр | Тип | Описание |
