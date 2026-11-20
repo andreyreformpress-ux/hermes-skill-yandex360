@@ -113,7 +113,7 @@ metadata:
 
 Нюансы API (проверено 2026-11-20):
 - `create_event` → `participants`: массив объектов `{"email": ..., "participation_type": "ATTENDEE"|"OPTIONAL"}`; поля MEMBER/RESOURCE — невалидны.
-- Переговорка бронируется добавлением её email (из `list_rooms`, напр. `1507@restream.ru`) в `participants` как ATTENDEE + `location` = имя переговорки. В списке участников события переговорка НЕ отображается — проверяй бронь через `get_room_availability`.
+- Переговорка бронируется добавлением её email (из `list_rooms`, формат `<номер/имя>@<домен организации>`) в `participants` как ATTENDEE + `location` = имя переговорки. В списке участников события переговорка НЕ отображается — проверяй бронь через `get_room_availability`.
 - Снять броню переговорки через API НЕЛЬЗЯ точечно: `remove_event_participants` требует UUID participation_id (email → «is not UUID», а переговорка не видна в списке участников), `update_event` с `location:""`/`null` и заменой `participants` бронь не снимает. Единственный рабочий путь — `delete_event` + `create_event` заново без переговорки (участникам уходит отмена и новое приглашение).
 - Если у сервера календаря не видно токена-инструментов в сессии, но `hermes mcp test yandex360_calendar` проходит — ходи напрямую streamable-HTTP MCP: initialize → `notifications/initialized` → `tools/call`; имя инструмента на сервере с ТОЧКОЙ (`calendar.list_events`), подчёркивания — только в сессии Hermes.
 
