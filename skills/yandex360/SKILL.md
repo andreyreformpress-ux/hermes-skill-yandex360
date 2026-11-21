@@ -5,10 +5,6 @@ version: 1.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [email, calendar, yandex, telemost, mcp, meetings, productivity]
-    related_skills: [calendar-slot-finder, email-inbox-triage]
 ---
 
 # Яндекс 360 через MCP (почта + календарь + Телемост)
@@ -25,7 +21,7 @@ metadata:
 
 ## Три сервера и три ключа
 
-| Сервис | Сервер | URL | Ключ .env | Схема |
+| Сервис | Сервер | URL | Ключ в `.env` | Схема |
 |---|---|---|---|---|
 | Почта | `yandex360_mail` | `https://mcp.360.yandex.net/v1/mail/mcp` | `YANDEX360_MAIL_API_KEY` | **Bearer** |
 | Календарь | `yandex360_calendar` | `https://mcp.360.yandex.net/v1/calendar/mcp` | `YANDEX360_CALENDAR_API_KEY` | **OAuth** |

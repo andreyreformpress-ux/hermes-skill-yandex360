@@ -1,0 +1,46 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "yandex360",
+  "version": "1.2.0",
+  "description": "Yandex 360 MCP servers (Mail, Calendar, Telemost) with a battle-tested usage skill for Hermes Agent",
+  "author": {
+    "name": "andreyreformpress-ux",
+    "url": "https://github.com/andreyreformpress-ux"
+  },
+  "homepage": "https://github.com/andreyreformpress-ux/hermes-skill-yandex360#readme",
+  "repository": "https://github.com/andreyreformpress-ux/hermes-skill-yandex360",
+  "license": "MIT",
+  "keywords": ["yandex", "yandex-360", "mcp", "mail", "calendar", "telemost", "hermes"],
+  "extensions": {
+    "com.nousresearch.hermes": {
+      "config_schema": {
+        "mail_api_key": {
+          "secret": true,
+          "env": "YANDEX360_MAIL_API_KEY",
+          "label": "OAuth-токен Почты Яндекс 360",
+          "description": "Получите токен по ссылке «получить OAuth-токен» на https://yandex.ru/dev/yandex-360/mcp/ru/mail и вставьте сюда",
+          "required": true
+        },
+        "calendar_api_key": {
+          "secret": true,
+          "env": "YANDEX360_CALENDAR_API_KEY",
+          "label": "OAuth-токен Календаря Яндекс 360",
+          "description": "Получите токен на https://yandex.ru/dev/yandex-360/mcp/ru/calendar (ссылка «получить OAuth-токен») и вставьте сюда",
+          "required": true
+        },
+        "telemost_api_key": {
+          "secret": true,
+          "env": "YANDEX360_TELEMOST_API_KEY",
+          "label": "OAuth-токен Телемоста",
+          "description": "Получите токен на https://yandex.ru/dev/yandex-360/mcp/ru/telemost (ссылка «получить OAuth-токен») и вставьте сюда",
+          "required": true
+        }
+      },
+      "servers": {
+        "yandex360_mail": { "trust": "untrusted" },
+        "yandex360_calendar": { "trust": "untrusted" },
+        "yandex360_telemost": { "trust": "untrusted" }
+      }
+    }
+  }
+}
