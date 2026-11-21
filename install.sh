@@ -24,7 +24,8 @@ read_token() {
   local prompt="$1" var
   while true; do
     printf '%s' "$prompt"
-    read -rs var </dev/tty; printf '\n'
+    if ! read -rs var </dev/tty 2>/dev/null; then read -rs var; fi
+    printf '\n'
     if [ -n "$var" ]; then printf '%s' "$var"; return; fi
     echo "Пустое значение — попробуйте ещё раз (Ctrl+C для отмены)." >&2
   done
@@ -69,7 +70,8 @@ fi
 say "Проверка подключений…"
 ok=1
 for s in yandex360_mail yandex360_calendar yandex360_telemost; do
-  if "$HERMES_BIN" mcp test "$s" 2>/dev/null | grep -q "Tools discovered"; then
+  out="$("$HERMES_BIN" mcp test "$s" </dev/null 2>&1 || true)"
+  if printf '%s' "$out" | grep -q "Tools discovered"; then
     echo "  ✓ $s — подключен"
   else
     echo "  ✗ $s — не подключился (проверьте токен: $HERMES_BIN mcp test $s)"; ok=0
