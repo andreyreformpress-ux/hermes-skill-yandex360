@@ -36,31 +36,26 @@ platforms: [linux, macos, windows]
 
 Схема авторизации почты: документация Яндекса предписывает `OAuth`, но проверено — **работают обе**, `Bearer` и `OAuth`; в конфиге здесь стоит `Bearer`. Если почта внезапно начнёт отдавать 401 — попробуй сменить схему на `OAuth`.
 
-## Настройка (ключи только в .env)
+## Настройка
 
-1. Пользователь сам кладёт три ключа в `~/.hermes/.env` (профиль — `~/.hermes/profiles/<имя>/.env`):
-   ```bash
-   YANDEX360_MAIL_API_KEY=<токен почты>
-   YANDEX360_CALENDAR_API_KEY=<токен календаря>
-   YANDEX360_TELEMOST_API_KEY=<токен Телемоста>
-   chmod 600 ~/.hermes/.env
-   ```
-2. Регистрация серверов (в config.yaml — только ссылки `${VAR}`, токены туда не попадают):
-   ```bash
-   hermes config set mcp_servers.yandex360_mail.url "https://mcp.360.yandex.net/v1/mail/mcp" --force
-   hermes config set mcp_servers.yandex360_mail.headers.Authorization "Bearer ${YANDEX360_MAIL_API_KEY}" --force
-   hermes config set mcp_servers.yandex360_calendar.url "https://mcp.360.yandex.net/v1/calendar/mcp" --force
-   hermes config set mcp_servers.yandex360_calendar.headers.Authorization "OAuth ${YANDEX360_CALENDAR_API_KEY}" --force
-   hermes config set mcp_servers.yandex360_telemost.url "https://mcp.360.yandex.net/v1/telemost/mcp" --force
-   hermes config set mcp_servers.yandex360_telemost.headers.Authorization "OAuth ${YANDEX360_TELEMOST_API_KEY}" --force
-   ```
-3. Проверка: `hermes mcp test yandex360_mail` (13), `... yandex360_calendar` (15), `... yandex360_telemost` (18) → `hermes gateway restart`.
+Токены задаёт сам пользователь: они никогда не передаются в чат и не хранятся в config.yaml (там только ссылки `${VAR}`). Переменные: `YANDEX360_MAIL_API_KEY`, `YANDEX360_CALENDAR_API_KEY`, `YANDEX360_TELEMOST_API_KEY`.
 
-Если пользователь предлагает вставить токен в чат — откажись и дай шаг 1. `Unauthorized`/`403 Forbidden` на данных = токен неверен, истёк или выдан на другой сервис. Пустые списки без ошибок — проверь, тем ли аккаунтом выдан токен. Отзыв доступа: Яндекс ID → «Доступы к данным» → «Внешний ИИ-агент для …».
+**Быстрый путь** — интерактивный установщик из репозитория скилла: спросит три токена скрытым вводом, сохранит их в файл секретов профиля (права 600) и сам зарегистрирует серверы:
+```bash
+./install.sh
+```
 
-**Горячая перезагрузка MCP (диагностика):** шлюз подхватывает изменения `mcp_servers` без рестарта, но reconcile сравнивает только СОСТАВ серверов (имена). Если у уже добавленного сервера поменять `headers`/токен — живое подключение НЕ пересоздаётся и продолжит ходить со старым токеном (403 на данных), при этом `hermes mcp test` (свежий процесс, читает текущий конфиг) будет проходить. Лечение: `hermes config unset mcp_servers.<имя>` → дождаться в `~/.hermes/logs/gateway.log` строки `removed=['<имя>']` (~20–60 c) → вернуть конфиг и дождаться `added=['<имя>']` + регистрации инструментов в `agent.log`. Быстрый unset+set подряд не срабатывает — вочер не видит промежуточного состояния. И помни: `tools/list` при дискавери НЕ проверяет скоупы токена — сервер может «зарегистрировать все инструменты» с чужим токеном, а данные при этом будут 403. Перезапустить шлюз изнутри сессии агента НЕЛЬЗЯ (агент — дочерний процесс шлюза, рестарт убьёт команду и сессию; CLI это блокирует) — рестарт делает пользователь: статус-меню приложения → Restart gateway, или `hermes gateway restart` в своём терминале; пока идут активные чаты, шлюз откладывает рестарт («Restart needed»).
+**Ручной путь** — регистрация серверов (значения переменных пользователь кладёт в файл секретов профиля сам, либо в подключённый менеджер секретов через `hermes secrets`; готовый токен для нативного сервера можно также ввести в UI: Capabilities → Connectors → сервер → добавить ключ):
+```bash
+hermes config set mcp_servers.yandex360_mail.url "https://mcp.360.yandex.net/v1/mail/mcp" --force
+hermes config set mcp_servers.yandex360_mail.headers.Authorization "Bearer ${YANDEX360_MAIL_API_KEY}" --force
+hermes config set mcp_servers.yandex360_calendar.url "https://mcp.360.yandex.net/v1/calendar/mcp" --force
+hermes config set mcp_servers.yandex360_calendar.headers.Authorization "OAuth ${YANDEX360_CALENDAR_API_KEY}" --force
+hermes config set mcp_servers.yandex360_telemost.url "https://mcp.360.yandex.net/v1/telemost/mcp" --force
+hermes config set mcp_servers.yandex360_telemost.headers.Authorization "OAuth ${YANDEX360_TELEMOST_API_KEY}" --force
+```
 
-Документация: https://yandex.ru/dev/yandex-360/mcp/ru/ (предварительная версия API, обратная совместимость не гарантирована).
+Проверка: `hermes mcp test yandex360_mail` (13), `... yandex360_calendar` (15), `... yandex360_telemost` (18) → перезапуск шлюза.
 
 ## Имена инструментов
 

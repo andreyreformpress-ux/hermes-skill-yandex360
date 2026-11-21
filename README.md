@@ -18,72 +18,57 @@
 
 **Телемост** — создание видеовстреч (комната ожидания, трансляция, соорганизаторы, автоконспектирование, автооблачная запись), ссылки подключения, поиск людей, чаты/каналы/треды и поиск сообщений (только чтение).
 
-## Установка (как плагин Hermes — рекомендуемый способ)
+## Установка
+
+Клонируйте репозиторий и запустите интерактивный установщик — он спросит три OAuth-токена скрытым вводом, сохранит их в файл секретов профиля (права 600), зарегистрирует все три MCP-сервера, скопирует скилл и проверит подключение:
 
 ```bash
-hermes plugins install andreyreformpress-ux/hermes-skill-yandex360
-hermes plugins enable yandex360
+git clone https://github.com/andreyreformpress-ux/hermes-skill-yandex360.git
+cd hermes-skill-yandex360 && ./install.sh
 ```
 
-Плагин регистрирует все три MCP-сервера и подключает скилл `yandex360` (46 инструментов + справочники схем). Портативные пакеты устанавливаются выключенными — включите, как выше.
+Токены можно в любой момент поменять: в приложении **Capabilities → Connectors → сервер → изменить ключ**, либо отредактировав переменные в файле секретов профиля. Если вы используете 1Password/Bitwarden — токены можно хранить в менеджере секретов (`hermes secrets onepassword` / `hermes secrets bitwarden`) вместо файла.
 
-**Ключи:** после установки откройте в приложении **Capabilities → Plugins → yandex360 → Settings** — там три поля для OAuth-токенов (Почта / Календарь / Телемост). Значение сохраняется в `~/.hermes/.env` (никогда в config.yaml), заголовки авторизации подставляются автоматически. Альтернатива без UI — положить ключи в `.env` вручную (см. «Настройка», шаг 2). Если вы используете 1Password/Bitwarden — токены можно хранить там и подключить через `hermes secrets onepassword` / `hermes secrets bitwarden`, тогда `.env` не нужен вовсе.
+После установки перезапустите шлюз (`hermes gateway restart` или Restart gateway в статус-меню приложения) — инструменты появятся в новых сессиях.
 
-Серверы помечены `trust: untrusted` — Hermes будет спрашивать подтверждение перед каждой пишущей операцией (черновики, создание/изменение событий, соорганизаторы). Это осознанный безопасный дефолт для распространяемого пакета; ослабить можно, добавив свою запись сервера с тем же именем в config.yaml.
+## Настройка (вручную, без установщика)
 
-## Установка (только скилл, без плагина)
+1. Получите три OAuth-токена по ссылкам «получить OAuth-токен» (у каждого сервиса свой токен, скоупы не взаимозаменяемы):
+   - Почта: https://yandex.ru/dev/yandex-360/mcp/ru/mail
+   - Календарь: https://yandex.ru/dev/yandex-360/mcp/ru/calendar
+   - Телемост: https://yandex.ru/dev/yandex-360/mcp/ru/telemost
+2. Положите их в `~/.hermes/.env` (для профиля — `~/.hermes/profiles/<имя>/.env`):
+   ```bash
+   YANDEX360_MAIL_API_KEY=<токен почты>
+   YANDEX360_CALENDAR_API_KEY=<токен календаря>
+   YANDEX360_TELEMOST_API_KEY=<токен Телемоста>
+   chmod 600 ~/.hermes/.env
+   ```
+3. Зарегистрируйте серверы (в config.yaml — только ссылки `${VAR}`, токены туда не попадают):
+   ```bash
+   hermes config set mcp_servers.yandex360_mail.url "https://mcp.360.yandex.net/v1/mail/mcp" --force
+   hermes config set mcp_servers.yandex360_mail.headers.Authorization "Bearer ${YANDEX360_MAIL_API_KEY}" --force
+   hermes config set mcp_servers.yandex360_calendar.url "https://mcp.360.yandex.net/v1/calendar/mcp" --force
+   hermes config set mcp_servers.yandex360_calendar.headers.Authorization "OAuth ${YANDEX360_CALENDAR_API_KEY}" --force
+   hermes config set mcp_servers.yandex360_telemost.url "https://mcp.360.yandex.net/v1/telemost/mcp" --force
+   hermes config set mcp_servers.yandex360_telemost.headers.Authorization "OAuth ${YANDEX360_TELEMOST_API_KEY}" --force
+   ```
+4. Скилл (если ставите без git clone): `hermes skills install https://raw.githubusercontent.com/andreyreformpress-ux/hermes-skill-yandex360/main/skills/yandex360/SKILL.md`
+5. Проверка и включение: `hermes mcp test yandex360_mail` (13), `... yandex360_calendar` (15), `... yandex360_telemost` (18) → перезапуск шлюза.
 
-```bash
-git clone https://github.com/andreyreformpress-ux/hermes-skill-yandex360.git \
-  ~/.hermes/skills/productivity/yandex360
-```
-(при этом MCP-серверы придётся регистрировать вручную — см. «Настройка»)
-
-## Настройка
-
-Ключи **никогда не хранятся в config.yaml и не передаются в чат** — только в `~/.hermes/.env`, а конфиг ссылается на них как `${VAR}` (Hermes подставляет значения при старте агента):
-
-```bash
-# 1. Получите три OAuth-токена (у каждого сервиса свой, скоупы не взаимозаменяемы):
-#    почта:     https://yandex.ru/dev/yandex-360/mcp/ru/mail
-#    календарь: https://oauth.yandex.ru/authorize?client_id=d5fff53202474631801939f538932a5c&response_type=token
-#    телемост:  https://oauth.yandex.ru/authorize?client_id=80d9d53eb9c34b11baa4d76778fe5282&response_type=token
-
-# 2. Положите их в ~/.hermes/.env:
-YANDEX360_MAIL_API_KEY=<токен почты>
-YANDEX360_CALENDAR_API_KEY=<токен календаря>
-YANDEX360_TELEMOST_API_KEY=<токен Телемоста>
-chmod 600 ~/.hermes/.env
-
-# 3. Зарегистрируйте MCP-серверы:
-hermes config set mcp_servers.yandex360_mail.url "https://mcp.360.yandex.net/v1/mail/mcp" --force
-hermes config set mcp_servers.yandex360_mail.headers.Authorization "Bearer ${YANDEX360_MAIL_API_KEY}" --force
-hermes config set mcp_servers.yandex360_calendar.url "https://mcp.360.yandex.net/v1/calendar/mcp" --force
-hermes config set mcp_servers.yandex360_calendar.headers.Authorization "OAuth ${YANDEX360_CALENDAR_API_KEY}" --force
-hermes config set mcp_servers.yandex360_telemost.url "https://mcp.360.yandex.net/v1/telemost/mcp" --force
-hermes config set mcp_servers.yandex360_telemost.headers.Authorization "OAuth ${YANDEX360_TELEMOST_API_KEY}" --force
-
-# 4. Проверьте и перезапустите шлюз:
-hermes mcp test yandex360_mail      # → 13 инструментов
-hermes mcp test yandex360_calendar  # → 15
-hermes mcp test yandex360_telemost  # → 18
-hermes gateway restart
-```
-
-⚠️ **Важно:** токен почты **не** даёт доступа к календарю и Телемосту — подключение пройдёт, но обращения к данным вернут 403/пустые списки. Схемы авторизации тоже разные: почта — `Bearer`, календарь и Телемост — `OAuth`.
+⚠️ **Важно:** токен почты **не** даёт доступа к календарю и Телемосту — подключение пройдёт, но обращения к данным вернут 403/пустые списки. Схемы авторизации тоже разные: почта — `Bearer`, календарь и Телемост — `OAuth` (эмпирически `Bearer` принимают все три, но конфигурируйте по документации).
 
 ## Структура
 
 ```
-SKILL.md                      — когда применять, настройка, карты всех 46 инструментов, сценарии
-references/tools-mail.md      — полные схемы параметров почты (13)
-references/tools-calendar.md  — полные схемы параметров календаря (15)
-references/tools-telemost.md  — полные схемы параметров Телемоста (18)
+install.sh                    — интерактивный установщик (токены + серверы + скилл)
+skills/yandex360/SKILL.md     — когда применять, настройка, карты всех 46 инструментов, сценарии
+skills/yandex360/references/  — полные схемы параметров: tools-mail (13), tools-calendar (15), tools-telemost (18)
 ```
 
 ## Правила безопасности, зашитые в скилл
 
-- Токены — только в `.env`; в config.yaml — ссылки `${VAR}`; агент не принимает ключи в чате.
+- Токены — только в файле секретов профиля; в config.yaml — ссылки `${VAR}`; агент не принимает ключи в чате.
 - Все изменяющие операции (создание/изменение/удаление событий, соорганизаторы, удаление писем) — только после явного подтверждения пользователя.
 - Удаление — всегда с перечислением того, что будет удалено.
 - `mail.update_draft` затирает пропущенные поля — скилл требует сначала прочитать текущее состояние.
